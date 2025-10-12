@@ -684,6 +684,48 @@ ToggleInfStamina:OnChanged(function()
     end
 end)
 
+-- God Mode
+local godModeRunning = false
+local godModeConnection
+
+local ToggleGodMode = Tabs.Player:AddToggle("GodMode", {
+    Title = "God Mode",
+    Description = "Become invincible (infinite health)",
+    Default = false
+})
+
+ToggleGodMode:OnChanged(function()
+    godModeRunning = Options.GodMode.Value
+    
+    if godModeRunning then
+        task.spawn(function()
+            local ReplicatedStorage = game:GetService("ReplicatedStorage")
+            
+            while godModeRunning do
+                pcall(function()
+                    local RemoteEvents = ReplicatedStorage:WaitForChild("RemoteEvents")
+                    local DamagePlayer = RemoteEvents:WaitForChild("DamagePlayer")
+                    DamagePlayer:FireServer(-math.huge)
+                end)
+                
+                task.wait(0.1)
+            end
+        end)
+        
+        Fluent:Notify({
+            Title = "God Mode",
+            Content = "God Mode Enabled",
+            Duration = 3
+        })
+    else
+        Fluent:Notify({
+            Title = "God Mode",
+            Content = "God Mode Disabled",
+            Duration = 3
+        })
+    end
+end)
+
 -- ============================================
 -- MISC TAB
 -- ============================================
