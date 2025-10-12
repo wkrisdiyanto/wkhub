@@ -52,6 +52,10 @@ local UNIVERSE_DATABASE = {
     ["79546208627805"] = {
         Name = "99 Nights in the Forest",
         ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+    },
+    ["732693493454"] = {
+        Name = "99 Nights in the Forest",
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
     }
 }
 
