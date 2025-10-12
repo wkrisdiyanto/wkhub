@@ -55,6 +55,33 @@ local function withCacheBuster(url)
     return url .. sep .. "cb=" .. tostring(os.time())
 end
 
+-- Optional: Remote manifest so you don't have to edit this file for new games
+local REMOTE_MANIFEST_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/manifest.json"
+
+local function mergeRemoteDatabase()
+    local ok, data = pcall(function()
+        local body = game:HttpGet(withCacheBuster(REMOTE_MANIFEST_URL))
+        return game:GetService("HttpService"):JSONDecode(body)
+    end)
+    if ok and typeof(data) == "table" then
+        for placeId, entry in pairs(data) do
+            local key = tostring(placeId)
+            if typeof(entry) == "table" then
+                local name = entry.Name or ("Game " .. key)
+                local url = entry.ScriptURL or entry.Url or entry.url
+                if typeof(url) == "string" and #url > 0 then
+                    GAME_DATABASE[key] = { Name = name, ScriptURL = url }
+                end
+            elseif typeof(entry) == "string" then
+                GAME_DATABASE[key] = { Name = ("Game " .. key), ScriptURL = entry }
+            end
+        end
+    end
+end
+
+-- Try to pull latest mappings (safe to fail silently and fall back to local)
+mergeRemoteDatabase()
+
 print("=== WKHub Loader ===")
 print("Current Place ID:", currentPlaceId)
 
