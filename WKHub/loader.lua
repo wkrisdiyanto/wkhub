@@ -7,31 +7,31 @@ local GAME_DATABASE = {
     -- Mount Sumbing
     ["14963184269"] = {
         Name = "Mount Sumbing",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/refs/heads/main/WKHub/sumbing.lua?token=GHSAT0AAAAAADMZV54PC7LIHTPQH6POQ23C2HLAWAQ"
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/sumbing.lua"
     },
     
     -- Mount Atin
     ["123224294054165"] = {
         Name = "Mount Atin",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/refs/heads/main/WKHub/atin.lua?token=GHSAT0AAAAAADMZV54PTL7HUZBC6SXVDNUM2HLAU3A"
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/atin.lua"
     },
     
     -- Mount Mono
     ["91490659446272"] = {
         Name = "Mount Mono",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/refs/heads/main/WKHub/mono.lua?token=GHSAT0AAAAAADMZV54PLH6TRKF5GR3CQCDS2HLAVNQ"
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/mono.lua"
     },
     
     -- Mount Taber
     ["12399530955"] = {
         Name = "Mount Taber",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/refs/heads/main/WKHub/taber.lua?token=GHSAT0AAAAAADMZV54PZZWQJILZG2A4NUMU2HLAWSA"
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/taber.lua"
     },
     
     -- 99 Nights in the Forest
     ["79546208627805"] = {
         Name = "99 Nights in the Forest",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/refs/heads/main/WKHub/forest.lua?token=GHSAT0AAAAAADMZV54PVK3J6MTXG2JNVVFK2HLAW2Q"
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
     },
     
     -- Tambahkan game lain di sini
