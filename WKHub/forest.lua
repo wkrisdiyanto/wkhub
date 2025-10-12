@@ -3,9 +3,25 @@ local SaveManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/d
 local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
 
 -- ============================================
--- 99 NIGHTS IN THE FOREST MODULE
+-- GAME DETECTION
 -- ============================================
--- Script ini akan di-load oleh main loader
+-- Place ID untuk 99 Nights in the Forest
+-- Menggunakan string untuk handle angka besar
+local NIGHTS_FOREST_ID = "79546208627805"
+local currentPlaceId = tostring(game.PlaceId)
+
+print("Current Place ID:", currentPlaceId)
+print("Expected Place ID:", NIGHTS_FOREST_ID)
+
+-- Skip detection untuk testing (comment line ini jika mau strict detection)
+-- if currentPlaceId ~= NIGHTS_FOREST_ID then
+--     game:GetService("StarterGui"):SetCore("SendNotification", {
+--         Title = "Wrong Game!";
+--         Text = "This script is for 99 Nights in the Forest only!\nPlace ID: " .. currentPlaceId;
+--         Duration = 8;
+--     })
+--     return
+-- end
 
 -- ============================================
 -- CREATE WINDOW
