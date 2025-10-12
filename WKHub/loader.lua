@@ -33,16 +33,6 @@ local GAME_DATABASE = {
         Name = "99 Nights in the Forest",
         ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
     },
-    -- 99 Nights in the Forest (alternate place)
-    ["1266509999114328"] = {
-        Name = "99 Nights in the Forest",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
-    },
-    -- 99 Nights in the Forest (another observed sub-place)
-    ["126650999114328"] = {
-        Name = "99 Nights in the Forest",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
-    },
     
     -- Tambahkan game lain di sini
     -- ["PLACE_ID"] = {
@@ -51,12 +41,17 @@ local GAME_DATABASE = {
     -- },
 }
 
+-- Optional: universe-level mapping (works across lobby/ingame places of the same experience)
+local UNIVERSE_DATABASE = {
+    -- ["UNIVERSE_ID"] = { Name = "Game Name", ScriptURL = "https://.../script.lua" }
+}
+
 -- ============================================
 -- DETECTION & LOADING
 -- ============================================
 
 local currentPlaceId = tostring(game.PlaceId)
-local gameInfo = GAME_DATABASE[currentPlaceId]
+local currentGameId = tostring(game.GameId)
 
 -- Utility: append cache-buster to avoid CDN caching old raw content
 local function withCacheBuster(url)
@@ -74,16 +69,35 @@ local function mergeRemoteDatabase()
         return game:GetService("HttpService"):JSONDecode(body)
     end)
     if ok and typeof(data) == "table" then
-        for placeId, entry in pairs(data) do
-            local key = tostring(placeId)
-            if typeof(entry) == "table" then
-                local name = entry.Name or ("Game " .. key)
-                local url = entry.ScriptURL or entry.Url or entry.url
-                if typeof(url) == "string" and #url > 0 then
-                    GAME_DATABASE[key] = { Name = name, ScriptURL = url }
+        -- Allow either flat placeId->entry mapping, or nested { places = {...}, universes = {...} }
+        local places = data.places or data
+        if typeof(places) == "table" then
+            for placeId, entry in pairs(places) do
+                local key = tostring(placeId)
+                if typeof(entry) == "table" then
+                    local name = entry.Name or ("Game " .. key)
+                    local url = entry.ScriptURL or entry.Url or entry.url
+                    if typeof(url) == "string" and #url > 0 then
+                        GAME_DATABASE[key] = { Name = name, ScriptURL = url }
+                    end
+                elseif typeof(entry) == "string" then
+                    GAME_DATABASE[key] = { Name = ("Game " .. key), ScriptURL = entry }
                 end
-            elseif typeof(entry) == "string" then
-                GAME_DATABASE[key] = { Name = ("Game " .. key), ScriptURL = entry }
+            end
+        end
+        local universes = data.universes
+        if typeof(universes) == "table" then
+            for universeId, entry in pairs(universes) do
+                local key = tostring(universeId)
+                if typeof(entry) == "table" then
+                    local name = entry.Name or ("Game " .. key)
+                    local url = entry.ScriptURL or entry.Url or entry.url
+                    if typeof(url) == "string" and #url > 0 then
+                        UNIVERSE_DATABASE[key] = { Name = name, ScriptURL = url }
+                    end
+                elseif typeof(entry) == "string" then
+                    UNIVERSE_DATABASE[key] = { Name = ("Game " .. key), ScriptURL = entry }
+                end
             end
         end
     end
@@ -94,6 +108,10 @@ mergeRemoteDatabase()
 
 print("=== WKHub Loader ===")
 print("Current Place ID:", currentPlaceId)
+print("Current Game ID:", currentGameId)
+
+-- Resolve after remote merge to allow dynamic updates
+local gameInfo = GAME_DATABASE[currentPlaceId] or UNIVERSE_DATABASE[currentGameId]
 
 if gameInfo then
     print("Game Detected:", gameInfo.Name)
