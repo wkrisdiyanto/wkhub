@@ -38,6 +38,11 @@ local GAME_DATABASE = {
         Name = "99 Nights in the Forest",
         ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
     },
+    -- 99 Nights in the Forest (another observed sub-place)
+    ["126650999114328"] = {
+        Name = "99 Nights in the Forest",
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+    },
     
     -- Tambahkan game lain di sini
     -- ["PLACE_ID"] = {
