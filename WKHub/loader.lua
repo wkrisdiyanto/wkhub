@@ -44,6 +44,10 @@ local GAME_DATABASE = {
 -- Optional: universe-level mapping (works across lobby/ingame places of the same experience)
 local UNIVERSE_DATABASE = {
     -- ["UNIVERSE_ID"] = { Name = "Game Name", ScriptURL = "https://.../script.lua" }
+    ["79546208627805"] = {
+        Name = "99 Nights in the Forest",
+        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+    }
 }
 
 -- ============================================
