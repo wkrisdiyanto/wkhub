@@ -1,9 +1,1 @@
-{
-  "places": {
-    "79546208627805": { "Name": "99 Nights in the Forest", "ScriptURL": "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua" },
-    "126650999114328": { "Name": "99 Nights in the Forest", "ScriptURL": "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua" }
-  },
-  "universes": {
-    "79546208627805": { "Name": "99 Nights in the Forest", "ScriptURL": "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua" }
-  }
-}
+
