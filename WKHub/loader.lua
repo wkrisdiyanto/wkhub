@@ -1,43 +1,51 @@
 -- ============================================
--- WKHUB MAIN LOADER (HYBRID VERSION)
--- Simple + Remote Manifest Support
+-- WKHUB MAIN LOADER (SMART VERSION)
+-- Auto-detects game even if not in database
 -- ============================================
 
--- Local game database (fallback jika remote gagal)
 local GAMES = {
     -- Mount Sumbing
     [14963184269] = {
         name = "Mount Sumbing",
-        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/sumbing.lua"
+        script = "sumbing.lua"
     },
     
     -- Mount Taber
     [12399530955] = {
         name = "Mount Taber",
-        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/taber.lua"
+        script = "taber.lua"
     },
     
-    -- Mount Atin - ⚠️ GANTI PlaceId yang benar!
-    [1232242940] = { -- Example ID, sesuaikan!
+    -- Mount Atin
+    [1232242940] = {
         name = "Mount Atin",
-        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/atin.lua"
+        script = "atin.lua"
     },
     
-    -- Mount Mono - ⚠️ GANTI PlaceId yang benar!
-    [914906594] = { -- Example ID, sesuaikan!
+    -- Mount Mono
+    [914906594] = {
         name = "Mount Mono",
-        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/mono.lua"
+        script = "mono.lua"
     },
     
-    -- 99 Nights in the Forest (in-game) - ✅ CONFIRMED
+    -- 99 Nights in the Forest (FIXED)
     [126509999114328] = {
         name = "99 Nights in the Forest",
-        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+        script = "forest.lua"
     }
 }
 
--- Remote manifest URL (optional - untuk update tanpa edit script)
-local MANIFEST_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/manifest.json"
+-- Base URL untuk semua script
+local BASE_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/"
+
+-- Game name patterns untuk auto-detection
+local GAME_PATTERNS = {
+    ["99 [Nn]ights"] = "forest.lua",
+    ["[Mm]ount [Ss]umbing"] = "sumbing.lua",
+    ["[Mm]ount [Tt]aber"] = "taber.lua",
+    ["[Mm]ount [Aa]tin"] = "atin.lua",
+    ["[Mm]ount [Mm]ono"] = "mono.lua"
+}
 
 -- ============================================
 -- HELPER FUNCTIONS
@@ -57,36 +65,8 @@ local function cacheBuster(url)
     return url .. (url:find("?") and "&" or "?") .. "t=" .. os.time()
 end
 
-local function fetchRemoteManifest()
-    local ok, result = pcall(function()
-        local raw = game:HttpGet(cacheBuster(MANIFEST_URL), true)
-        return game:GetService("HttpService"):JSONDecode(raw)
-    end)
-    
-    if ok and type(result) == "table" then
-        return result
-    end
-    return nil
-end
-
-local function mergeRemoteGames(manifest)
-    if not manifest then return end
-    
-    -- Support format: { "12345": { name = "...", script = "..." } }
-    local games = manifest.games or manifest.places or manifest
-    
-    for placeId, data in pairs(games) do
-        local id = tonumber(placeId)
-        if id and type(data) == "table" then
-            GAMES[id] = {
-                name = data.name or data.Name or ("Game " .. id),
-                script = data.script or data.url or data.ScriptURL
-            }
-        end
-    end
-end
-
-local function loadScript(url, gameName)
+local function loadScript(scriptName, gameName)
+    local url = BASE_URL .. scriptName
     print("📥 Loading:", url)
     notify("WKHub", "Loading " .. gameName .. "...", 3)
     
@@ -105,34 +85,34 @@ local function loadScript(url, gameName)
     return exec, err
 end
 
+local function detectGameByName()
+    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+    
+    for pattern, scriptFile in pairs(GAME_PATTERNS) do
+        if gameName:match(pattern) then
+            return scriptFile, gameName
+        end
+    end
+    
+    return nil, gameName
+end
+
 -- ============================================
 -- MAIN EXECUTION
 -- ============================================
 
 print("╔════════════════════════════════╗")
-print("║     WKHub Universal Loader     ║")
+print("║   WKHub Universal Loader v2    ║")
 print("╚════════════════════════════════╝")
 
 local currentPlace = game.PlaceId
-print("📍 Current Place ID:", currentPlace)
+print("📍 Place ID:", currentPlace)
 
--- Step 1: Try to fetch remote manifest
-print("🌐 Fetching remote manifest...")
-local manifest = fetchRemoteManifest()
-
-if manifest then
-    print("✅ Remote manifest loaded")
-    mergeRemoteGames(manifest)
-else
-    print("⚠️  Using local database")
-end
-
--- Step 2: Check if game is supported
+-- Step 1: Check database
 local gameInfo = GAMES[currentPlace]
 
 if gameInfo then
-    print("✅ Game Detected:", gameInfo.name)
-    print("📜 Script URL:", gameInfo.script)
+    print("✅ Game Found in Database:", gameInfo.name)
     
     local success, err = loadScript(gameInfo.script, gameInfo.name)
     
@@ -145,22 +125,46 @@ if gameInfo then
         notify("WKHub Error", "Failed to load. Check console (F9)", 8)
     end
 else
-    print("❌ Game not supported")
-    print("📋 Place ID:", currentPlace)
+    -- Step 2: Try auto-detection
+    print("🔍 PlaceId not in database, trying auto-detect...")
     
-    notify(
-        "WKHub", 
-        "Game not supported!\nPlace ID: " .. currentPlace,
-        10
-    )
+    local scriptFile, gameName = detectGameByName()
     
-    -- Auto-copy PlaceId untuk memudahkan report
-    if setclipboard then
-        setclipboard(tostring(currentPlace))
-        print("📋 Place ID copied to clipboard!")
+    if scriptFile then
+        print("✅ Auto-detected:", gameName)
+        print("📜 Script:", scriptFile)
+        
+        local success, err = loadScript(scriptFile, gameName)
+        
+        if success then
+            print("✅ Script loaded successfully!")
+            notify("WKHub", gameName .. " loaded!", 5)
+            print("💡 Tip: Add PlaceId " .. currentPlace .. " to database for faster loading")
+        else
+            warn("❌ Failed to load script")
+            warn("Error:", err)
+        end
+    else
+        -- Step 3: Not supported
+        print("❌ Game not supported")
+        print("📋 Place ID:", currentPlace)
+        print("🎮 Game Name:", gameName)
+        
+        notify(
+            "WKHub", 
+            "Game not supported!\nPlace ID: " .. currentPlace,
+            10
+        )
+        
+        if setclipboard then
+            setclipboard(tostring(currentPlace))
+            print("📋 Place ID copied to clipboard!")
+        end
+        
+        print("\n💡 Send this info to developer:")
+        print("   Place ID:", currentPlace)
+        print("   Game Name:", gameName)
     end
-    
-    print("\n💡 Tip: Send this Place ID to developer")
 end
 
 print("═══════════════════════════════════")
