@@ -1,219 +1,172 @@
 -- ============================================
--- WKHUB MAIN LOADER
+-- WKHUB MAIN LOADER (HYBRID VERSION)
+-- Simple + Remote Manifest Support
 -- ============================================
--- File ini akan auto-detect game dan load script yang sesuai
 
-local GAME_DATABASE = {
+-- Local game database (fallback jika remote gagal)
+local GAMES = {
     -- Mount Sumbing
-    ["14963184269"] = {
-        Name = "Mount Sumbing",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/sumbing.lua"
-    },
-    
-    -- Mount Atin
-    ["123224294054165"] = {
-        Name = "Mount Atin",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/atin.lua"
-    },
-    
-    -- Mount Mono
-    ["91490659446272"] = {
-        Name = "Mount Mono",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/mono.lua"
+    [14963184269] = {
+        name = "Mount Sumbing",
+        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/sumbing.lua"
     },
     
     -- Mount Taber
-    ["12399530955"] = {
-        Name = "Mount Taber",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/taber.lua"
+    [12399530955] = {
+        name = "Mount Taber",
+        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/taber.lua"
     },
     
-    -- 99 Nights in the Forest
-    ["79546208627805"] = {
-        Name = "99 Nights in the Forest",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
-    },
-    -- 99 Nights in the Forest (in-game place)
-    ["126650999114328"] = {
-        Name = "99 Nights in the Forest",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+    -- Mount Atin - ⚠️ GANTI PlaceId yang benar!
+    [1232242940] = { -- Example ID, sesuaikan!
+        name = "Mount Atin",
+        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/atin.lua"
     },
     
-    -- Tambahkan game lain di sini
-    -- ["PLACE_ID"] = {
-    --     Name = "Game Name",
-    --     ScriptURL = "URL_SCRIPT"
-    -- },
-}
-
--- Optional: universe-level mapping (works across lobby/ingame places of the same experience)
-local UNIVERSE_DATABASE = {
-    -- ["UNIVERSE_ID"] = { Name = "Game Name", ScriptURL = "https://.../script.lua" }
-    ["79546208627805"] = {
-        Name = "99 Nights in the Forest",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+    -- Mount Mono - ⚠️ GANTI PlaceId yang benar!
+    [914906594] = { -- Example ID, sesuaikan!
+        name = "Mount Mono",
+        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/mono.lua"
     },
-    ["732693493454"] = {
-        Name = "99 Nights in the Forest",
-        ScriptURL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+    
+    -- 99 Nights in the Forest (lobby) - ⚠️ Verify ini PlaceId atau UniverseId
+    [79546208627805] = {
+        name = "99 Nights in the Forest",
+        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
+    },
+    
+    -- 99 Nights (in-game place)
+    [126650999114328] = {
+        name = "99 Nights in the Forest",
+        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
     }
 }
 
+-- Remote manifest URL (optional - untuk update tanpa edit script)
+local MANIFEST_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/manifest.json"
+
 -- ============================================
--- DETECTION & LOADING
+-- HELPER FUNCTIONS
 -- ============================================
 
-local currentPlaceId = tostring(game.PlaceId)
-local currentGameId = tostring(game.GameId)
-
--- Utility: append cache-buster to avoid CDN caching old raw content
-local function withCacheBuster(url)
-    local hasQuery = string.find(url, "?", 1, true) ~= nil
-    local sep = hasQuery and "&" or "?"
-    return url .. sep .. "cb=" .. tostring(os.time())
-end
-
--- Optional: Remote manifest so you don't have to edit this file for new games
-local REMOTE_MANIFEST_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/manifest.json"
-
-local function mergeRemoteDatabase()
-    local ok, data = pcall(function()
-        local body = game:HttpGet(withCacheBuster(REMOTE_MANIFEST_URL))
-        return game:GetService("HttpService"):JSONDecode(body)
+local function notify(title, text, duration)
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = duration or 5
+        })
     end)
-    if ok and typeof(data) == "table" then
-        -- Allow either flat placeId->entry mapping, or nested { places = {...}, universes = {...} }
-        local places = data.places or data
-        if typeof(places) == "table" then
-            for placeId, entry in pairs(places) do
-                local key = tostring(placeId)
-                if typeof(entry) == "table" then
-                    local name = entry.Name or ("Game " .. key)
-                    local url = entry.ScriptURL or entry.Url or entry.url
-                    if typeof(url) == "string" and #url > 0 then
-                        GAME_DATABASE[key] = { Name = name, ScriptURL = url }
-                    end
-                elseif typeof(entry) == "string" then
-                    GAME_DATABASE[key] = { Name = ("Game " .. key), ScriptURL = entry }
-                end
-            end
-        end
-        local universes = data.universes
-        if typeof(universes) == "table" then
-            for universeId, entry in pairs(universes) do
-                local key = tostring(universeId)
-                if typeof(entry) == "table" then
-                    local name = entry.Name or ("Game " .. key)
-                    local url = entry.ScriptURL or entry.Url or entry.url
-                    if typeof(url) == "string" and #url > 0 then
-                        UNIVERSE_DATABASE[key] = { Name = name, ScriptURL = url }
-                    end
-                elseif typeof(entry) == "string" then
-                    UNIVERSE_DATABASE[key] = { Name = ("Game " .. key), ScriptURL = entry }
-                end
-            end
-        end
-    end
 end
 
--- Try to pull latest mappings (safe to fail silently and fall back to local)
-mergeRemoteDatabase()
+local function cacheBuster(url)
+    return url .. (url:find("?") and "&" or "?") .. "t=" .. os.time()
+end
 
--- Helper: fetch UniverseId for a given PlaceId
-local function fetchUniverseId(placeId)
-    local HttpService = game:GetService("HttpService")
-    local url = "https://games.roblox.com/v1/places/multiget-place-details?placeIds=" .. tostring(placeId)
-    local body = game:HttpGet(withCacheBuster(url))
-    local arr = HttpService:JSONDecode(body)
-    if typeof(arr) == "table" and #arr > 0 then
-        local uni = arr[1] and arr[1].universeId
-        if uni ~= nil then return tostring(uni) end
+local function fetchRemoteManifest()
+    local ok, result = pcall(function()
+        local raw = game:HttpGet(cacheBuster(MANIFEST_URL), true)
+        return game:GetService("HttpService"):JSONDecode(raw)
+    end)
+    
+    if ok and type(result) == "table" then
+        return result
     end
     return nil
 end
 
--- Cache for seed place -> universe id
-local SEED_UNIVERSE_CACHE = {}
-
-print("=== WKHub Loader ===")
-print("Current Place ID:", currentPlaceId)
-print("Current Game ID:", currentGameId)
-
--- Resolve after remote merge to allow dynamic updates
-local gameInfo = GAME_DATABASE[currentPlaceId] or UNIVERSE_DATABASE[currentGameId]
-
--- Fallback: match by UniverseId of known seed places (handles lobby vs ingame automatically)
-if not gameInfo then
-    local okCur, currentUniverseId = pcall(fetchUniverseId, currentPlaceId)
-    if okCur and currentUniverseId then
-        -- Direct universe mapping from manifest
-        if UNIVERSE_DATABASE[currentUniverseId] then
-            gameInfo = UNIVERSE_DATABASE[currentUniverseId]
-        else
-            for seedPlaceId, entry in pairs(GAME_DATABASE) do
-                if seedPlaceId ~= currentPlaceId then
-                    local cached = SEED_UNIVERSE_CACHE[seedPlaceId]
-                    if not cached then
-                        local okSeed, seedUni = pcall(fetchUniverseId, seedPlaceId)
-                        if okSeed then
-                            SEED_UNIVERSE_CACHE[seedPlaceId] = seedUni
-                            cached = seedUni
-                        end
-                    end
-                    if cached and cached == currentUniverseId then
-                        gameInfo = entry
-                        break
-                    end
-                end
-            end
+local function mergeRemoteGames(manifest)
+    if not manifest then return end
+    
+    -- Support format: { "12345": { name = "...", script = "..." } }
+    local games = manifest.games or manifest.places or manifest
+    
+    for placeId, data in pairs(games) do
+        local id = tonumber(placeId)
+        if id and type(data) == "table" then
+            GAMES[id] = {
+                name = data.name or data.Name or ("Game " .. id),
+                script = data.script or data.url or data.ScriptURL
+            }
         end
     end
 end
 
-if gameInfo then
-    print("Game Detected:", gameInfo.Name)
-    print("Loading script from:", gameInfo.ScriptURL)
+local function loadScript(url, gameName)
+    print("📥 Loading:", url)
+    notify("WKHub", "Loading " .. gameName .. "...", 3)
     
-    -- Show loading notification
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "WKHub";
-        Text = "Loading " .. gameInfo.Name .. " script...";
-        Duration = 5;
-    })
-    
-    -- Load game-specific script
-    local success, errorMsg = pcall(function()
-        local url = withCacheBuster(gameInfo.ScriptURL)
-        loadstring(game:HttpGet(url))()
+    local success, result = pcall(function()
+        return game:HttpGet(cacheBuster(url), true)
     end)
+    
+    if not success then
+        return false, "HTTP Error: " .. tostring(result)
+    end
+    
+    local exec, err = pcall(function()
+        loadstring(result)()
+    end)
+    
+    return exec, err
+end
+
+-- ============================================
+-- MAIN EXECUTION
+-- ============================================
+
+print("╔════════════════════════════════╗")
+print("║     WKHub Universal Loader     ║")
+print("╚════════════════════════════════╝")
+
+local currentPlace = game.PlaceId
+print("📍 Current Place ID:", currentPlace)
+
+-- Step 1: Try to fetch remote manifest
+print("🌐 Fetching remote manifest...")
+local manifest = fetchRemoteManifest()
+
+if manifest then
+    print("✅ Remote manifest loaded")
+    mergeRemoteGames(manifest)
+else
+    print("⚠️  Using local database")
+end
+
+-- Step 2: Check if game is supported
+local gameInfo = GAMES[currentPlace]
+
+if gameInfo then
+    print("✅ Game Detected:", gameInfo.name)
+    print("📜 Script URL:", gameInfo.script)
+    
+    local success, err = loadScript(gameInfo.script, gameInfo.name)
     
     if success then
         print("✅ Script loaded successfully!")
+        notify("WKHub", gameInfo.name .. " loaded!", 5)
     else
-        warn("❌ Failed to load script:", errorMsg)
-        
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = "WKHub Error";
-            Text = "Failed to load script. Check console (F9)";
-            Duration = 8;
-        })
+        warn("❌ Failed to load script")
+        warn("Error:", err)
+        notify("WKHub Error", "Failed to load. Check console (F9)", 8)
     end
 else
-    print("⚠️ Game not supported")
-    print("Place ID:", currentPlaceId)
+    print("❌ Game not supported")
+    print("📋 Place ID:", currentPlace)
     
-    game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "WKHub";
-        Text = "This game is not supported yet!\nPlace ID: " .. currentPlaceId;
-        Duration = 10;
-    })
+    notify(
+        "WKHub", 
+        "Game not supported!\nPlace ID: " .. currentPlace,
+        10
+    )
     
-    -- Tawarkan untuk copy Place ID
+    -- Auto-copy PlaceId untuk memudahkan report
     if setclipboard then
-        setclipboard(currentPlaceId)
-        print("Place ID copied to clipboard!")
+        setclipboard(tostring(currentPlace))
+        print("📋 Place ID copied to clipboard!")
     end
+    
+    print("\n💡 Tip: Send this Place ID to developer")
 end
 
-
-print("===================")
+print("═══════════════════════════════════")
