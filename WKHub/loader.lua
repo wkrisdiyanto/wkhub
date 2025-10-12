@@ -29,14 +29,8 @@ local GAMES = {
         script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/mono.lua"
     },
     
-    -- 99 Nights in the Forest (lobby) - ⚠️ Verify ini PlaceId atau UniverseId
-    [79546208627805] = {
-        name = "99 Nights in the Forest",
-        script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
-    },
-    
-    -- 99 Nights (in-game place)
-    [126650999114328] = {
+    -- 99 Nights in the Forest (in-game) - ✅ CONFIRMED
+    [126509999114328] = {
         name = "99 Nights in the Forest",
         script = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/forest.lua"
     }
