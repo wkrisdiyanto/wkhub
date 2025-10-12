@@ -48,6 +48,13 @@ local GAME_DATABASE = {
 local currentPlaceId = tostring(game.PlaceId)
 local gameInfo = GAME_DATABASE[currentPlaceId]
 
+-- Utility: append cache-buster to avoid CDN caching old raw content
+local function withCacheBuster(url)
+    local hasQuery = string.find(url, "?", 1, true) ~= nil
+    local sep = hasQuery and "&" or "?"
+    return url .. sep .. "cb=" .. tostring(os.time())
+end
+
 print("=== WKHub Loader ===")
 print("Current Place ID:", currentPlaceId)
 
@@ -64,7 +71,8 @@ if gameInfo then
     
     -- Load game-specific script
     local success, errorMsg = pcall(function()
-        loadstring(game:HttpGet(gameInfo.ScriptURL))()
+        local url = withCacheBuster(gameInfo.ScriptURL)
+        loadstring(game:HttpGet(url))()
     end)
     
     if success then
