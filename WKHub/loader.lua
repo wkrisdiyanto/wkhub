@@ -106,12 +106,56 @@ end
 -- Try to pull latest mappings (safe to fail silently and fall back to local)
 mergeRemoteDatabase()
 
+-- Helper: fetch UniverseId for a given PlaceId
+local function fetchUniverseId(placeId)
+    local HttpService = game:GetService("HttpService")
+    local url = "https://games.roblox.com/v1/places/multiget-place-details?placeIds=" .. tostring(placeId)
+    local body = game:HttpGet(withCacheBuster(url))
+    local arr = HttpService:JSONDecode(body)
+    if typeof(arr) == "table" and #arr > 0 then
+        local uni = arr[1] and arr[1].universeId
+        if uni ~= nil then return tostring(uni) end
+    end
+    return nil
+end
+
+-- Cache for seed place -> universe id
+local SEED_UNIVERSE_CACHE = {}
+
 print("=== WKHub Loader ===")
 print("Current Place ID:", currentPlaceId)
 print("Current Game ID:", currentGameId)
 
 -- Resolve after remote merge to allow dynamic updates
 local gameInfo = GAME_DATABASE[currentPlaceId] or UNIVERSE_DATABASE[currentGameId]
+
+-- Fallback: match by UniverseId of known seed places (handles lobby vs ingame automatically)
+if not gameInfo then
+    local okCur, currentUniverseId = pcall(fetchUniverseId, currentPlaceId)
+    if okCur and currentUniverseId then
+        -- Direct universe mapping from manifest
+        if UNIVERSE_DATABASE[currentUniverseId] then
+            gameInfo = UNIVERSE_DATABASE[currentUniverseId]
+        else
+            for seedPlaceId, entry in pairs(GAME_DATABASE) do
+                if seedPlaceId ~= currentPlaceId then
+                    local cached = SEED_UNIVERSE_CACHE[seedPlaceId]
+                    if not cached then
+                        local okSeed, seedUni = pcall(fetchUniverseId, seedPlaceId)
+                        if okSeed then
+                            SEED_UNIVERSE_CACHE[seedPlaceId] = seedUni
+                            cached = seedUni
+                        end
+                    end
+                    if cached and cached == currentUniverseId then
+                        gameInfo = entry
+                        break
+                    end
+                end
+            end
+        end
+    end
+end
 
 if gameInfo then
     print("Game Detected:", gameInfo.Name)
