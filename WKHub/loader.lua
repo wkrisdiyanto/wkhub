@@ -23,7 +23,7 @@ local GAMES = {
     },
     
     -- Mount Mono
-    [91490659446272] = {
+    [914906594] = {
         name = "Mount Mono",
         script = "mono.lua"
     },
@@ -32,6 +32,12 @@ local GAMES = {
     [126509999114328] = {
         name = "99 Nights in the Forest",
         script = "forest.lua"
+    },
+    
+    -- Violence District
+    [93978595733734] = {
+        name = "Violence District",
+        script = "violence.lua"
     }
 }
 
@@ -44,7 +50,8 @@ local GAME_PATTERNS = {
     ["[Mm]ount [Ss]umbing"] = "sumbing.lua",
     ["[Mm]ount [Tt]aber"] = "taber.lua",
     ["[Mm]ount [Aa]tin"] = "atin.lua",
-    ["[Mm]ount [Mm]ono"] = "mono.lua"
+    ["[Mm]ount [Mm]ono"] = "mono.lua",
+    ["[Vv]iolence [Dd]istrict"] = "violence.lua"
 }
 
 -- ============================================
@@ -168,4 +175,3 @@ else
 end
 
 print("═══════════════════════════════════")
-
