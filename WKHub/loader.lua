@@ -1,80 +1,62 @@
 -- ============================================
--- WKHUB MAIN LOADER (SMART VERSION)
--- Auto-detects game even if not in database
+-- WKHUB MAIN LOADER (SIMPLE DYNAMIC VERSION)
+-- Relies on games.json from GitHub
 -- ============================================
 
-local GAMES = {
-    -- Mount Sumbing
-    [14963184269] = {
-        name = "Mount Sumbing",
-        script = "sumbing.lua"
-    },
-    
-    -- Mount Taber
-    [12399530955] = {
-        name = "Mount Taber",
-        script = "taber.lua"
-    },
-    
-    -- Mount Atin
-    [1232242940] = {
-        name = "Mount Atin",
-        script = "atin.lua"
-    },
-    
-    -- Mount Mono
-    [91490659446272] = {
-        name = "Mount Mono",
-        script = "mono.lua"
-    },
-    
-    -- 99 Nights in the Forest (FIXED)
-    [126509999114328] = {
-        name = "99 Nights in the Forest",
-        script = "forest.lua"
-    },
-    
-    -- Violence District
-    [93978595733734] = {
-        name = "Violence District",
-        script = "vd.lua"
-    }
-}
+local HttpService = game:GetService("HttpService")
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
+local VirtualUser = game:GetService("VirtualUser")
 
--- Base URL untuk semua script
+-- Base URL for scripts
 local BASE_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/"
 
--- Game name patterns untuk auto-detection
+-- GitHub JSON URL for game database
+local GAMES_JSON_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/games.json"
+
+-- Game name patterns for auto-detection
 local GAME_PATTERNS = {
     ["99 [Nn]ights"] = "forest.lua",
     ["[Mm]ount [Ss]umbing"] = "sumbing.lua",
     ["[Mm]ount [Tt]aber"] = "taber.lua",
     ["[Mm]ount [Aa]tin"] = "atin.lua",
     ["[Mm]ount [Mm]ono"] = "mono.lua",
-    ["[Vv]iolence [Dd]istrict"] = "violence.lua"
+    ["[Vv]iolence [Dd]istrict"] = "vd.lua"
 }
 
 -- ============================================
 -- HELPER FUNCTIONS
 -- ============================================
 
-local function notify(title, text, duration)
-    pcall(function()
-        game:GetService("StarterGui"):SetCore("SendNotification", {
-            Title = title,
-            Text = text,
-            Duration = duration or 5
-        })
-    end)
-end
-
 local function cacheBuster(url)
     return url .. (url:find("?") and "&" or "?") .. "t=" .. os.time()
 end
 
+local function fetchGamesFromGitHub()
+    local success, result = pcall(function()
+        local jsonUrl = cacheBuster(GAMES_JSON_URL)
+        local jsonData = game:HttpGet(jsonUrl, true)
+        return HttpService:JSONDecode(jsonData)
+    end)
+    
+    if success and result then
+        local gamesTable = {}
+        for _, gameInfo in pairs(result) do
+            if gameInfo.placeId and gameInfo.name and gameInfo.script then
+                gamesTable[tonumber(gameInfo.placeId)] = {
+                    name = gameInfo.name,
+                    script = gameInfo.script
+                }
+            end
+        end
+        return true, gamesTable
+    else
+        return false, nil
+    end
+end
+
 local function loadScript(scriptName, gameName)
     local url = BASE_URL .. scriptName
-    print("📥 Loading:", url)
     notify("WKHub", "Loading " .. gameName .. "...", 3)
     
     local success, result = pcall(function()
@@ -93,7 +75,7 @@ local function loadScript(scriptName, gameName)
 end
 
 local function detectGameByName()
-    local gameName = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name
+    local gameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
     
     for pattern, scriptFile in pairs(GAME_PATTERNS) do
         if gameName:match(pattern) then
@@ -104,76 +86,100 @@ local function detectGameByName()
     return nil, gameName
 end
 
+local function notify(title, text, duration)
+    pcall(function()
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = title,
+            Text = text,
+            Duration = duration or 5
+        })
+    end)
+end
+
+-- Anti-AFK Function
+local function enableAntiAFK()
+    local player = Players.LocalPlayer
+    local antiAFKConnection = player.Idled:Connect(function()
+        VirtualUser:CaptureController()
+        VirtualUser:ClickButton2(Vector2.new())
+    end)
+    print("Anti-AFK Enabled")
+    notify("WKHub", "Anti-AFK Protection Active", 3)
+    return antiAFKConnection
+end
+
 -- ============================================
 -- MAIN EXECUTION
 -- ============================================
 
-print("╔════════════════════════════════╗")
-print("║   WKHub Universal Loader v2    ║")
-print("╚════════════════════════════════╝")
+print("WKHub Simple Dynamic Loader v4")
 
 local currentPlace = game.PlaceId
-print("📍 Place ID:", currentPlace)
+print("Place ID:", currentPlace)
 
--- Step 1: Check database
+-- Enable Anti-AFK immediately
+local antiAFKConn = enableAntiAFK()
+
+-- Fetch games from JSON
+local fetchSuccess, GAMES = fetchGamesFromGitHub()
+
+if not fetchSuccess then
+    notify("WKHub Error", "Failed to load game database from GitHub. Check games.json.", 8)
+    print("❌ JSON fetch failed")
+    return -- Exit early
+end
+
+print("✅ Loaded games from JSON")
+
+-- Check database
 local gameInfo = GAMES[currentPlace]
 
 if gameInfo then
-    print("✅ Game Found in Database:", gameInfo.name)
+    print("Game Found:", gameInfo.name)
     
     local success, err = loadScript(gameInfo.script, gameInfo.name)
     
     if success then
-        print("✅ Script loaded successfully!")
+        print("Script loaded!")
         notify("WKHub", gameInfo.name .. " loaded!", 5)
     else
-        warn("❌ Failed to load script")
-        warn("Error:", err)
-        notify("WKHub Error", "Failed to load. Check console (F9)", 8)
+        warn("Load failed:", err)
+        notify("WKHub Error", "Failed to load script. Check console.", 8)
     end
 else
-    -- Step 2: Try auto-detection
-    print("🔍 PlaceId not in database, trying auto-detect...")
+    -- Auto-detect by name
+    print("Auto-detecting...")
     
     local scriptFile, gameName = detectGameByName()
     
     if scriptFile then
-        print("✅ Auto-detected:", gameName)
-        print("📜 Script:", scriptFile)
+        print("Auto-detected:", gameName)
         
         local success, err = loadScript(scriptFile, gameName)
         
         if success then
-            print("✅ Script loaded successfully!")
+            print("Script loaded!")
             notify("WKHub", gameName .. " loaded!", 5)
-            print("💡 Tip: Add PlaceId " .. currentPlace .. " to database for faster loading")
         else
-            warn("❌ Failed to load script")
-            warn("Error:", err)
+            warn("Load failed:", err)
         end
     else
-        -- Step 3: Not supported
-        print("❌ Game not supported")
-        print("📋 Place ID:", currentPlace)
-        print("🎮 Game Name:", gameName)
+        local gameName = MarketplaceService:GetProductInfo(game.PlaceId).Name
+        print("Game not supported:", gameName)
+        print("Place ID:", currentPlace)
         
-        notify(
-            "WKHub", 
-            "Game not supported!\nPlace ID: " .. currentPlace,
-            10
-        )
+        notify("WKHub", "Game not supported! Place ID: " .. currentPlace, 10)
         
         if setclipboard then
             setclipboard(tostring(currentPlace))
-            print("📋 Place ID copied to clipboard!")
+            print("Place ID copied!")
         end
         
-        print("\n💡 Send this info to developer:")
-        print("   Place ID:", currentPlace)
-        print("   Game Name:", gameName)
+        print("Add to games.json on GitHub")
     end
 end
 
-print("═══════════════════════════════════")
-
-
+-- Cleanup Anti-AFK on script end (optional, but keeps it simple)
+if antiAFKConn then
+    antiAFKConn:Disconnect()
+end
