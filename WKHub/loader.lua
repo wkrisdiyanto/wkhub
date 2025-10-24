@@ -23,7 +23,7 @@ local GAMES = {
     },
     
     -- Mount Mono
-    [914906594] = {
+    [91490659446272] = {
         name = "Mount Mono",
         script = "mono.lua"
     },
@@ -175,4 +175,5 @@ else
 end
 
 print("═══════════════════════════════════")
+
 
