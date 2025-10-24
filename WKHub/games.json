@@ -1,0 +1,32 @@
+[
+  {
+    "placeId": 14963184269,
+    "name": "Mount Sumbing",
+    "script": "sumbing.lua"
+  },
+  {
+    "placeId": 12399530955,
+    "name": "Mount Taber",
+    "script": "taber.lua"
+  },
+  {
+    "placeId": 1232242940,
+    "name": "Mount Atin",
+    "script": "atin.lua"
+  },
+  {
+    "placeId": 914906594,
+    "name": "Mount Mono",
+    "script": "mono.lua"
+  },
+  {
+    "placeId": 126509999114328,
+    "name": "99 Nights in the Forest",
+    "script": "forest.lua"
+  },
+  {
+    "placeId": 93978595733734,
+    "name": "Violence District",
+    "script": "vd.lua"
+  }
+]
