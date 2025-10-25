@@ -37,7 +37,7 @@ local GAMES = {
     -- Violence District
     [93978595733734] = {
         name = "Violence District",
-        script = "violence.lua"
+        script = "vd.lua"
     }
 }
 
@@ -231,3 +231,4 @@ else
 end
 
 print("═══════════════════════════════════")
+
