@@ -11,9 +11,6 @@ local VirtualUser = game:GetService("VirtualUser")
 -- Base URL for scripts
 local BASE_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/"
 
--- GitHub JSON URL for game database
-local GAMES_JSON_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/games.json"
-
 -- Game name patterns for auto-detection
 local GAME_PATTERNS = {
     ["99 [Nn]ights"] = "forest.lua",
@@ -33,26 +30,16 @@ local function cacheBuster(url)
 end
 
 local function fetchGamesFromGitHub()
-    local success, result = pcall(function()
-        local jsonUrl = cacheBuster(GAMES_JSON_URL)
-        local jsonData = game:HttpGet(jsonUrl, true)
-        return HttpService:JSONDecode(jsonData)
-    end)
-    
-    if success and result then
-        local gamesTable = {}
-        for _, gameInfo in pairs(result) do
-            if gameInfo.placeId and gameInfo.name and gameInfo.script then
-                gamesTable[tonumber(gameInfo.placeId)] = {
-                    name = gameInfo.name,
-                    script = gameInfo.script
-                }
-            end
-        end
-        return true, gamesTable
-    else
-        return false, nil
-    end
+    -- Hardcoded from local games.json - no network needed
+    local gamesTable = {
+        [14963184269] = { name = "Mount Sumbing", script = "sumbing.lua" },
+        [12399530955] = { name = "Mount Taber", script = "taber.lua" },
+        [1232242940] = { name = "Mount Atin", script = "atin.lua" },
+        [914906594] = { name = "Mount Mono", script = "mono.lua" },
+        [126509999114328] = { name = "99 Nights in the Forest", script = "forest.lua" },
+        [93978595733734] = { name = "Violence District", script = "vd.lua" }
+    }
+    return true, gamesTable
 end
 
 local function loadScript(scriptName, gameName)
@@ -121,17 +108,9 @@ print("Place ID:", currentPlace)
 local antiAFKConn = enableAntiAFK()
 
 -- Fetch games from JSON
-local fetchSuccess, GAMES = fetchGamesFromGitHub()
+local GAMES = fetchGamesFromGitHub()  -- Returns true, table
+print("✅ Loaded games from local data")
 
-if not fetchSuccess then
-    notify("WKHub Error", "Failed to load game database from GitHub. Check games.json.", 8)
-    print("❌ JSON fetch failed")
-    return -- Exit early
-end
-
-print("✅ Loaded games from JSON")
-
--- Check database
 local gameInfo = GAMES[currentPlace]
 
 if gameInfo then
@@ -185,7 +164,7 @@ if gameInfo then
         end
     else
         warn("Load failed:", err)
-        notify("WKHub Error", "Failed to load script. Check console.", 8)
+        notify("WKHub Error", "Failed to load script: " .. tostring(err), 8)
     end
 else
     -- Auto-detect by name
