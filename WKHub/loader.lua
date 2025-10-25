@@ -134,6 +134,9 @@ if gameInfo then
             local player = Players.LocalPlayer
             local playerGui = player:WaitForChild("PlayerGui")
             
+            -- Wait for window to fully initialize after loading script
+            task.wait(2)
+            
             local dockGui = Instance.new("ScreenGui")
             dockGui.Name = "WKHubDock"
             dockGui.ResetOnSpawn = false
@@ -151,23 +154,56 @@ if gameInfo then
             
             local isMinimized = false
             
-            -- Toggle on click
+            -- Toggle on click with debug and Fluent methods
             dockIcon.MouseButton1Click:Connect(function()
+                print("[WKHub Dock] Click detected - Toggling...")
                 isMinimized = not isMinimized
                 if _G.WKHubWindow then
-                    _G.WKHubWindow.Visible = not isMinimized
+                    print("[WKHub Dock] Window exists, calling toggle method...")
+                    if isMinimized then
+                        if _G.WKHubWindow.Minimize then
+                            _G.WKHubWindow:Minimize()
+                        else
+                            _G.WKHubWindow.Minimized = true  -- Fallback property
+                        end
+                    else
+                        if _G.WKHubWindow.Restore then
+                            _G.WKHubWindow:Restore()
+                        else
+                            _G.WKHubWindow.Minimized = false  -- Fallback
+                        end
+                    end
+                    print("[WKHub Dock] Toggle applied (minimized:", isMinimized, ")")
+                else
+                    print("[WKHub Dock] ERROR: _G.WKHubWindow is nil - Window not found!")
                 end
                 dockIcon.Image = isMinimized and "rbxassetid://3926307971" or "rbxassetid://3926305904"  -- Toggle icon (restore/minimize)
             end)
             
-            -- Backup hotkey (Left Ctrl)
+            -- Backup hotkey (Left Ctrl) with debug
             local hotkeyConnection
             hotkeyConnection = UserInputService.InputBegan:Connect(function(input, gameProcessed)
                 if gameProcessed then return end
                 if input.KeyCode == Enum.KeyCode.LeftControl then
+                    print("[WKHub Dock] Hotkey pressed - Toggling...")
                     isMinimized = not isMinimized
                     if _G.WKHubWindow then
-                        _G.WKHubWindow.Visible = not isMinimized
+                        if isMinimized then
+                            if _G.WKHubWindow.Minimize then
+                                _G.WKHubWindow:Minimize()
+                            else
+                                _G.WKHubWindow.Minimized = true
+                            end
+                        else
+                            if _G.WKHubWindow.Restore then
+                                _G.WKHubWindow:Restore()
+                            else
+                                _G.WKHubWindow.Minimized = false
+                            end
+                        end
+                        print("[WKHub Dock] Hotkey toggle applied (minimized:", isMinimized, ")")
+                    else
+                        print("[WKHub Dock] ERROR: _G.WKHubWindow is nil on hotkey!")
                     end
                     dockIcon.Image = isMinimized and "rbxassetid://3926307971" or "rbxassetid://3926305904"
                 end
@@ -231,5 +267,3 @@ else
 end
 
 print("═══════════════════════════════════")
-
-
