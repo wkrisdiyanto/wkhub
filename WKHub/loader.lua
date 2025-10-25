@@ -51,7 +51,7 @@ local GAME_PATTERNS = {
     ["[Mm]ount [Tt]aber"] = "taber.lua",
     ["[Mm]ount [Aa]tin"] = "atin.lua",
     ["[Mm]ount [Mm]ono"] = "mono.lua",
-    ["[Vv]iolence [Dd]istrict"] = "violence.lua"
+    ["[Vv]iolence [Dd]istrict"] = "vd.lua"
 }
 
 -- ============================================
@@ -231,4 +231,5 @@ else
 end
 
 print("═══════════════════════════════════")
+
 
