@@ -129,13 +129,27 @@ if gameInfo then
         
         -- Add global dock icon for toggling WKHub window
         pcall(function()
+            print("[WKHub Dock] Starting dock creation...")
+            
             local Players = game:GetService("Players")
             local UserInputService = game:GetService("UserInputService")
             local player = Players.LocalPlayer
             local playerGui = player:WaitForChild("PlayerGui")
             
-            -- Wait for window to fully initialize after loading script
-            task.wait(2)
+            -- Wait for _G.WKHubWindow to be available (loop instead of fixed wait)
+            local maxWaitTime = 10  -- Max 10 seconds
+            local startTime = tick()
+            while not _G.WKHubWindow and (tick() - startTime) < maxWaitTime do
+                task.wait(0.5)
+                print("[WKHub Dock] Waiting for window... (", tick() - startTime, "s)")
+            end
+            
+            if not _G.WKHubWindow then
+                print("[WKHub Dock] ERROR: Window not found after waiting - Dock creation failed!")
+                return
+            end
+            
+            print("[WKHub Dock] Window found! Creating dock...")
             
             local dockGui = Instance.new("ScreenGui")
             dockGui.Name = "WKHubDock"
@@ -163,14 +177,18 @@ if gameInfo then
                     if isMinimized then
                         if _G.WKHubWindow.Minimize then
                             _G.WKHubWindow:Minimize()
+                            print("[WKHub Dock] Called Minimize()")
                         else
-                            _G.WKHubWindow.Minimized = true  -- Fallback property
+                            _G.WKHubWindow.Visible = false  -- Fallback to Visible
+                            print("[WKHub Dock] Fallback: Set Visible = false")
                         end
                     else
                         if _G.WKHubWindow.Restore then
                             _G.WKHubWindow:Restore()
+                            print("[WKHub Dock] Called Restore()")
                         else
-                            _G.WKHubWindow.Minimized = false  -- Fallback
+                            _G.WKHubWindow.Visible = true  -- Fallback to Visible
+                            print("[WKHub Dock] Fallback: Set Visible = true")
                         end
                     end
                     print("[WKHub Dock] Toggle applied (minimized:", isMinimized, ")")
@@ -191,14 +209,18 @@ if gameInfo then
                         if isMinimized then
                             if _G.WKHubWindow.Minimize then
                                 _G.WKHubWindow:Minimize()
+                                print("[WKHub Dock] Hotkey: Called Minimize()")
                             else
-                                _G.WKHubWindow.Minimized = true
+                                _G.WKHubWindow.Visible = false
+                                print("[WKHub Dock] Hotkey: Fallback Visible = false")
                             end
                         else
                             if _G.WKHubWindow.Restore then
                                 _G.WKHubWindow:Restore()
+                                print("[WKHub Dock] Hotkey: Called Restore()")
                             else
-                                _G.WKHubWindow.Minimized = false
+                                _G.WKHubWindow.Visible = true
+                                print("[WKHub Dock] Hotkey: Fallback Visible = true")
                             end
                         end
                         print("[WKHub Dock] Hotkey toggle applied (minimized:", isMinimized, ")")
@@ -214,8 +236,11 @@ if gameInfo then
                 if not player.Parent then
                     dockGui:Destroy()
                     if hotkeyConnection then hotkeyConnection:Disconnect() end
+                    print("[WKHub Dock] Cleanup executed")
                 end
             end)
+            
+            print("[WKHub Dock] Dock created successfully!")
         end)
         
     else
