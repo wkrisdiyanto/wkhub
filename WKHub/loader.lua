@@ -142,6 +142,47 @@ if gameInfo then
     if success then
         print("Script loaded!")
         notify("WKHub", gameInfo.name .. " loaded!", 5)
+        
+        -- Mobile Dock Button for toggling menu (general)
+        if _G.WKHubWindow then
+            local DockGui = Instance.new("ScreenGui")
+            DockGui.Name = "WKHubDock"
+            DockGui.ResetOnSpawn = false
+            DockGui.Parent = game:GetService("CoreGui")
+
+            local DockFrame = Instance.new("Frame")
+            DockFrame.Size = UDim2.new(0, 60, 0, 60)
+            DockFrame.Position = UDim2.new(1, -70, 1, -70)
+            DockFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            DockFrame.BorderSizePixel = 0
+            DockFrame.Parent = DockGui
+
+            local DockCorner = Instance.new("UICorner")
+            DockCorner.CornerRadius = UDim.new(0, 30)
+            DockCorner.Parent = DockFrame
+
+            local DockButton = Instance.new("TextButton")
+            DockButton.Size = UDim2.new(1, 0, 1, 0)
+            DockButton.BackgroundTransparency = 1
+            DockButton.Text = "☰"
+            DockButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            DockButton.TextScaled = true
+            DockButton.Font = Enum.Font.GothamBold
+            DockButton.Parent = DockFrame
+
+            local isMinimized = _G.WKHubWindow.Minimized or false
+            DockButton.Activated:Connect(function()
+                isMinimized = not isMinimized
+                _G.WKHubWindow.Minimized = isMinimized
+                if isMinimized then
+                    DockButton.Text = "▶"
+                else
+                    DockButton.Text = "☰"
+                end
+            end)
+            
+            notify("WKHub", "Dock button added for mobile!", 3)
+        end
     else
         warn("Load failed:", err)
         notify("WKHub Error", "Failed to load script. Check console.", 8)
