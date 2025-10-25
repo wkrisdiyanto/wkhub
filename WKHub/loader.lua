@@ -9,7 +9,7 @@ local Players = game:GetService("Players")
 local VirtualUser = game:GetService("VirtualUser")
 
 -- Base URL for scripts
-local BASE_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/"
+-- local BASE_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/"
 
 -- Game name patterns for auto-detection
 local GAME_PATTERNS = {
@@ -43,22 +43,28 @@ local function fetchGamesFromGitHub()
 end
 
 local function loadScript(scriptName, gameName)
-    local url = BASE_URL .. scriptName
     notify("WKHub", "Loading " .. gameName .. "...", 3)
     
+    -- Try local file first
     local success, result = pcall(function()
-        return game:HttpGet(cacheBuster(url), true)
+        local fileContent = readfile(scriptName)
+        return loadstring(fileContent)()
     end)
     
     if not success then
-        return false, "HTTP Error: " .. tostring(result)
+        warn("Local load failed for " .. scriptName .. ": " .. tostring(result))
+        -- Fallback to GitHub if local fails (optional, comment out if no GitHub)
+        -- local url = BASE_URL .. scriptName
+        -- local httpSuccess, httpResult = pcall(function()
+        --     return game:HttpGet(cacheBuster(url), true)
+        -- end)
+        -- if httpSuccess then
+        --     return pcall(loadstring, httpResult)
+        -- end
+        return false, "Local file not found: " .. scriptName .. ". Ensure script is in executor directory."
     end
     
-    local exec, err = pcall(function()
-        loadstring(result)()
-    end)
-    
-    return exec, err
+    return success, result
 end
 
 local function detectGameByName()
