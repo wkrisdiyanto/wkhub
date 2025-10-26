@@ -1,5 +1,5 @@
 -- Manual configuration (SDK embedded via obfuscation)
-JunkieProtected.API_KEY = "8a7b5883-0403-41c3-88c9-4d7b41ec58de"
+JunkieProtected.API_KEY = "42512885-d927-4395-b168-538f8130308b"
 JunkieProtected.PROVIDER = "WKHub"
 JunkieProtected.SERVICE_ID = "wkhub"
 
@@ -247,3 +247,4 @@ else
 end
 
 print("═══════════════════════════════════")
+
