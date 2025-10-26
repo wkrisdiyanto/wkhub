@@ -1,80 +1,8 @@
--- Manual configuration (SDK embedded via obfuscation)
-JunkieProtected.API_KEY = "42512885-d927-4395-b168-538f8130308b"
-JunkieProtected.PROVIDER = "WKHub"
-JunkieProtected.SERVICE_ID = "wkhub"
+-- ============================================
+-- WKHUB MAIN LOADER (SMART VERSION)
+-- Auto-detects game even if not in database
+-- ============================================
 
--- Step 1: Check if keyless mode is enabled
-local keylessCheck = JunkieProtected.IsKeylessMode()
-
-if keylessCheck and keylessCheck.keyless_mode then
-    print("🎉 Keyless mode enabled - Starting script...")
-    -- Your main script here (original loader code will go here)
-else
-    -- Keyless mode disabled - need a key
-    print("🔑 Key required!")
-    
-    -- Get the key link
-    local keyLink = JunkieProtected.GetKeyLink()
-    print("Get your key: " .. keyLink)
-    
-    -- Get key from user (Note: In Roblox, implement a simple GUI or use executor input like ask() if available; hardcoded for demo)
-    local userKey = "DEMO_KEY_HERE"  -- Replace with actual input method, e.g., local userKey = game:GetService("HttpService"):GenerateGUID(false) or user prompt
-    
-    -- Validate the key
-    local result = JunkieProtected.ValidateKey({ Key = userKey })
-    
-    if result == "valid" then
-        print("✅ Key is valid! Starting script...")
-        
-        -- Step 2: Check HWID ban (optional; Roblox HWID is limited, use UserId as proxy)
-        local hwid = game.Players.LocalPlayer.UserId  -- Proxy for HWID; implement real HWID if SDK supports
-        local isBanned = JunkieProtected.IsHwidBanned(tostring(hwid))
-        
-        if isBanned then
-            print("🚫 Hardware/User is banned!")
-            game.Players.LocalPlayer:Kick("Hardware banned from this service")
-            return
-        end
-        
-        -- Step 3: Use global variables after verification
-        if _G.JD_ExpiresAt then
-            local currentTime = os.time()
-            local expiresAt = _G.JD_ExpiresAt
-            
-            if currentTime < expiresAt then
-                local timeLeft = expiresAt - currentTime
-                local daysLeft = math.floor(timeLeft / 86400)
-                print("⏰ Key expires in " .. daysLeft .. " days")
-            else
-                print("❌ Key has expired!")
-                game.Players.LocalPlayer:Kick("Key expired")
-                return
-            end
-        end
-        
-        -- Step 4: Check premium status
-        if _G.JD_IsPremium then
-            print("🌟 Premium user detected!")
-            -- Enable premium features (e.g., unlock all games in loader)
-        else
-            print("📝 Standard user")
-            -- Optional: Limit features, e.g., only basic games
-        end
-        
-        -- Step 5: Get Discord ID if available
-        if _G.JD_DiscordId then
-            print("👤 User Discord ID: " .. _G.JD_DiscordId)
-            -- Use for user-specific features
-        end
-        
-        -- Your main script here (insert original loader code)
-else
-        print("❌ Invalid key!")
-        game.Players.LocalPlayer:Kick("Invalid key. Get one from: " .. keyLink)
-    end
-end
-
--- Insert original loader code here (GAMES table and below)
 local GAMES = {
     -- Mount Sumbing
     [14963184269] = {
@@ -247,4 +175,3 @@ else
 end
 
 print("═══════════════════════════════════")
-
