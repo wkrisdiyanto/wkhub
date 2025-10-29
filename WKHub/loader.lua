@@ -1,8 +1,13 @@
 -- ============================================
--- WKHUB MAIN LOADER (SMART VERSION)
+-- WKHUB MAIN LOADER (VENUS LIB VERSION)
 -- Auto-detects game even if not in database
 -- ============================================
 
+print("========================================")
+print("WKHub Universal Loader v2.0")
+print("========================================")
+
+-- Game Database
 local GAMES = {
     -- Mount Sumbing
     [14963184269] = {
@@ -28,7 +33,7 @@ local GAMES = {
         script = "mono.lua"
     },
     
-    -- 99 Nights in the Forest (FIXED)
+    -- 99 Nights in the Forest
     [126509999114328] = {
         name = "99 Nights in the Forest",
         script = "forest.lua"
@@ -38,26 +43,31 @@ local GAMES = {
     [93978595733734] = {
         name = "Violence District",
         script = "vd.lua"
+    },
+    
+    -- Crocs Quest
+    [95937769845016] = {
+        name = "Crocs Quest",
+        script = "crocs.lua"
     }
 }
 
--- Base URL untuk semua script
+-- Base URL for all scripts
 local BASE_URL = "https://raw.githubusercontent.com/wkrisdiyanto/wkhub/main/WKHub/"
 
--- Game name patterns untuk auto-detection
+-- Game name patterns for auto-detection
 local GAME_PATTERNS = {
     ["99 [Nn]ights"] = "forest.lua",
     ["[Mm]ount [Ss]umbing"] = "sumbing.lua",
     ["[Mm]ount [Tt]aber"] = "taber.lua",
     ["[Mm]ount [Aa]tin"] = "atin.lua",
     ["[Mm]ount [Mm]ono"] = "mono.lua",
-    ["[Vv]iolence [Dd]istrict"] = "vd.lua"
+    ["[Vv]iolence [Dd]istrict"] = "vd.lua",
+    ["[Cc]rocs [Qq]uest"] = "crocs.lua",
+    ["[Cc]roctober"] = "crocs.lua"
 }
 
--- ============================================
--- HELPER FUNCTIONS
--- ============================================
-
+-- Helper Functions
 local function notify(title, text, duration)
     pcall(function()
         game:GetService("StarterGui"):SetCore("SendNotification", {
@@ -104,10 +114,7 @@ local function detectGameByName()
     return nil, gameName
 end
 
--- ============================================
--- MAIN EXECUTION
--- ============================================
-
+-- Main Execution
 print("╔════════════════════════════════╗")
 print("║   WKHub Universal Loader v2    ║")
 print("╚════════════════════════════════╝")
