@@ -49,6 +49,12 @@ local GAMES = {
     [95937769845016] = {
         name = "Crocs Quest",
         script = "crocs.lua"
+    },
+    
+    -- Fish It!
+    [121864768012064] = {
+        name = "Fish It!",
+        script = "fishit.lua"
     }
 }
 
@@ -64,7 +70,9 @@ local GAME_PATTERNS = {
     ["[Mm]ount [Mm]ono"] = "mono.lua",
     ["[Vv]iolence [Dd]istrict"] = "vd.lua",
     ["[Cc]rocs [Qq]uest"] = "crocs.lua",
-    ["[Cc]roctober"] = "crocs.lua"
+    ["[Cc]roctober"] = "crocs.lua",
+    ["[Ff]ish [Ii]t"] = "fishit.lua",
+    ["[Uu][Pp][Dd] [Ff]ish"] = "fishit.lua"
 }
 
 -- Helper Functions
