@@ -3,10 +3,6 @@
 -- Auto-detects game even if not in database
 -- ============================================
 
-print("========================================")
-print("WKHub Universal Loader v2.0")
-print("========================================")
-
 -- Game Database
 local GAMES = {
     -- Mount Sumbing
@@ -92,7 +88,6 @@ end
 
 local function loadScript(scriptName, gameName)
     local url = BASE_URL .. scriptName
-    print("📥 Loading:", url)
     notify("WKHub", "Loading " .. gameName .. "...", 3)
     
     local success, result = pcall(function()
@@ -123,55 +118,31 @@ local function detectGameByName()
 end
 
 -- Main Execution
-print("╔════════════════════════════════╗")
-print("║   WKHub Universal Loader v2    ║")
-print("╚════════════════════════════════╝")
-
 local currentPlace = game.PlaceId
-print("📍 Place ID:", currentPlace)
 
 -- Step 1: Check database
 local gameInfo = GAMES[currentPlace]
 
 if gameInfo then
-    print("✅ Game Found in Database:", gameInfo.name)
-    
     local success, err = loadScript(gameInfo.script, gameInfo.name)
     
     if success then
-        print("✅ Script loaded successfully!")
         notify("WKHub", gameInfo.name .. " loaded!", 5)
     else
-        warn("❌ Failed to load script")
-        warn("Error:", err)
         notify("WKHub Error", "Failed to load. Check console (F9)", 8)
     end
 else
     -- Step 2: Try auto-detection
-    print("🔍 PlaceId not in database, trying auto-detect...")
-    
     local scriptFile, gameName = detectGameByName()
     
     if scriptFile then
-        print("✅ Auto-detected:", gameName)
-        print("📜 Script:", scriptFile)
-        
         local success, err = loadScript(scriptFile, gameName)
         
         if success then
-            print("✅ Script loaded successfully!")
             notify("WKHub", gameName .. " loaded!", 5)
-            print("💡 Tip: Add PlaceId " .. currentPlace .. " to database for faster loading")
-        else
-            warn("❌ Failed to load script")
-            warn("Error:", err)
         end
     else
         -- Step 3: Not supported
-        print("❌ Game not supported")
-        print("📋 Place ID:", currentPlace)
-        print("🎮 Game Name:", gameName)
-        
         notify(
             "WKHub", 
             "Game not supported!\nPlace ID: " .. currentPlace,
@@ -180,13 +151,6 @@ else
         
         if setclipboard then
             setclipboard(tostring(currentPlace))
-            print("📋 Place ID copied to clipboard!")
         end
-        
-        print("\n💡 Send this info to developer:")
-        print("   Place ID:", currentPlace)
-        print("   Game Name:", gameName)
     end
 end
-
-print("═══════════════════════════════════")
