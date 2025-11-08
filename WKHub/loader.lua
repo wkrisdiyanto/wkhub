@@ -100,21 +100,24 @@ local function loadScript(scriptName, gameName)
     
     print("[WKHub] Attempting to load:", url)
     
-    -- Try multiple HTTP methods for compatibility
+    -- Use general executor methods (not HttpService)
     local result = nil
     local success = false
     
-    -- Method 1: HttpService (Standard Roblox)
-    local HttpService = game:GetService("HttpService")
+    -- Method 1: game:HttpGet (Most common executor method)
     success, result = pcall(function()
-        return HttpService:GetAsync(cacheBuster(url))
+        return game:HttpGet(cacheBuster(url))
     end)
     
-    -- Method 2: game:HttpGet (Executor specific)
-    if not success then
-        print("[WKHub] Trying alternate HTTP method...")
+    -- Method 2: http_request (General executor)
+    if not success and http_request then
+        print("[WKHub] Trying http_request...")
         success, result = pcall(function()
-            return game:HttpGet(cacheBuster(url))
+            local response = http_request({
+                Url = cacheBuster(url),
+                Method = "GET"
+            })
+            return response.Body
         end)
     end
     
@@ -123,18 +126,6 @@ local function loadScript(scriptName, gameName)
         print("[WKHub] Trying syn.request...")
         success, result = pcall(function()
             local response = syn.request({
-                Url = cacheBuster(url),
-                Method = "GET"
-            })
-            return response.Body
-        end)
-    end
-    
-    -- Method 4: http_request (General)
-    if not success and http_request then
-        print("[WKHub] Trying http_request...")
-        success, result = pcall(function()
-            local response = http_request({
                 Url = cacheBuster(url),
                 Method = "GET"
             })
