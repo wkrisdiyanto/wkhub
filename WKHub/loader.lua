@@ -51,6 +51,12 @@ local GAMES = {
     [121864768012064] = {
         name = "Fish It!",
         script = "fishit.lua"
+    },
+    
+    -- Plants Vs Brainrots
+    [127742093697776] = {
+        name = "Plants Vs Brainrots",
+        script = "pvb.lua"
     }
 }
 
@@ -68,7 +74,9 @@ local GAME_PATTERNS = {
     ["[Cc]rocs [Qq]uest"] = "crocs.lua",
     ["[Cc]roctober"] = "crocs.lua",
     ["[Ff]ish [Ii]t"] = "fishit.lua",
-    ["[Uu][Pp][Dd] [Ff]ish"] = "fishit.lua"
+    ["[Uu][Pp][Dd] [Ff]ish"] = "fishit.lua",
+    ["[Pp]lants [Vv]s [Bb]rainrots"] = "pvb.lua",
+    ["[Pp][Vv][Bb]"] = "pvb.lua"
 }
 
 -- Helper Functions
@@ -90,17 +98,27 @@ local function loadScript(scriptName, gameName)
     local url = BASE_URL .. scriptName
     notify("WKHub", "Loading " .. gameName .. "...", 3)
     
+    print("[WKHub] Attempting to load:", url)
+    
+    local HttpService = game:GetService("HttpService")
     local success, result = pcall(function()
-        return game:HttpGet(cacheBuster(url), true)
+        return HttpService:GetAsync(cacheBuster(url))
     end)
     
     if not success then
+        warn("[WKHub] HTTP Error:", result)
         return false, "HTTP Error: " .. tostring(result)
     end
+    
+    print("[WKHub] Script downloaded, executing...")
     
     local exec, err = pcall(function()
         loadstring(result)()
     end)
+    
+    if not exec then
+        warn("[WKHub] Execution Error:", err)
+    end
     
     return exec, err
 end
@@ -128,18 +146,25 @@ if gameInfo then
     
     if success then
         notify("WKHub", gameInfo.name .. " loaded!", 5)
+        print("[WKHub] Successfully loaded:", gameInfo.name)
     else
         notify("WKHub Error", "Failed to load. Check console (F9)", 8)
+        warn("[WKHub] Load failed:", err)
     end
 else
     -- Step 2: Try auto-detection
     local scriptFile, gameName = detectGameByName()
     
     if scriptFile then
+        print("[WKHub] Game detected:", gameName)
         local success, err = loadScript(scriptFile, gameName)
         
         if success then
             notify("WKHub", gameName .. " loaded!", 5)
+            print("[WKHub] Successfully loaded:", gameName)
+        else
+            notify("WKHub Error", "Failed to load. Check console (F9)", 8)
+            warn("[WKHub] Load failed:", err)
         end
     else
         -- Step 3: Not supported
