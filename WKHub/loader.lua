@@ -100,10 +100,47 @@ local function loadScript(scriptName, gameName)
     
     print("[WKHub] Attempting to load:", url)
     
+    -- Try multiple HTTP methods for compatibility
+    local result = nil
+    local success = false
+    
+    -- Method 1: HttpService (Standard Roblox)
     local HttpService = game:GetService("HttpService")
-    local success, result = pcall(function()
+    success, result = pcall(function()
         return HttpService:GetAsync(cacheBuster(url))
     end)
+    
+    -- Method 2: game:HttpGet (Executor specific)
+    if not success then
+        print("[WKHub] Trying alternate HTTP method...")
+        success, result = pcall(function()
+            return game:HttpGet(cacheBuster(url))
+        end)
+    end
+    
+    -- Method 3: syn.request (Synapse)
+    if not success and syn and syn.request then
+        print("[WKHub] Trying syn.request...")
+        success, result = pcall(function()
+            local response = syn.request({
+                Url = cacheBuster(url),
+                Method = "GET"
+            })
+            return response.Body
+        end)
+    end
+    
+    -- Method 4: http_request (General)
+    if not success and http_request then
+        print("[WKHub] Trying http_request...")
+        success, result = pcall(function()
+            local response = http_request({
+                Url = cacheBuster(url),
+                Method = "GET"
+            })
+            return response.Body
+        end)
+    end
     
     if not success then
         warn("[WKHub] HTTP Error:", result)
@@ -112,15 +149,20 @@ local function loadScript(scriptName, gameName)
     
     print("[WKHub] Script downloaded, executing...")
     
-    local exec, err = pcall(function()
-        loadstring(result)()
-    end)
+    local scriptFunc, loadErr = loadstring(result)
+    if not scriptFunc then
+        warn("[WKHub] Loadstring Error:", loadErr)
+        return false, "Loadstring Error: " .. tostring(loadErr)
+    end
+    
+    local exec, err = pcall(scriptFunc)
     
     if not exec then
         warn("[WKHub] Execution Error:", err)
+        return false, "Execution Error: " .. tostring(err)
     end
     
-    return exec, err
+    return true, nil
 end
 
 local function detectGameByName()
