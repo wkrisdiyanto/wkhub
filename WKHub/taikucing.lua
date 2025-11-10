@@ -1,31 +1,58 @@
 -- Script untuk join private server Fish It
-local TeleportService = game:GetService("TeleportService")
-local Players = game:GetService("Players")
+-- Support untuk semua executor
 
 local placeId = 121864768012064
-local privateServerCode = "19324558882035812688234003364118"
+local linkCode = "19324558882035812688234003364118"
 
-local player = Players.LocalPlayer
+-- Method 1: Menggunakan game:HttpGet (paling kompatibel)
+local url = string.format(
+    "https://www.roblox.com/games/start?placeId=%d&linkCode=%s",
+    placeId,
+    linkCode
+)
 
--- Function untuk join private server
-local function joinPrivateServer()
-    local success, errorMessage = pcall(function()
-        TeleportService:TeleportToPrivateServer(
-            placeId,
-            privateServerCode,
-            {player}
-        )
-    end)
-    
-    if success then
-        print("Berhasil join private server!")
-    else
-        warn("Gagal join private server: " .. tostring(errorMessage))
-    end
+-- Buka URL di browser (akan auto join)
+if syn and syn.request then
+    -- Untuk Synapse
+    syn.request({
+        Url = url,
+        Method = "GET"
+    })
+elseif request then
+    -- Untuk executor dengan request function
+    request({
+        Url = url,
+        Method = "GET"
+    })
+elseif http_request then
+    -- Untuk executor lain
+    http_request({
+        Url = url,
+        Method = "GET"
+    })
 end
 
--- Tunggu sebentar untuk memastikan player sudah load
-wait(1)
+-- Alternatif: Copy link ke clipboard
+if setclipboard then
+    setclipboard("https://www.roblox.com/games/121864768012064/UPD-Fish-It?privateServerLinkCode=19324558882035812688234003364118")
+    print("✅ Link private server disalin ke clipboard!")
+    print("📋 Paste di browser untuk join")
+else
+    print("⚠️ Executor tidak support clipboard")
+    print("🔗 Manual link: https://www.roblox.com/games/121864768012064/UPD-Fish-It?privateServerLinkCode=19324558882035812688234003364118")
+end
 
--- Join private server
-joinPrivateServer()
+-- Method 2: Teleport langsung (jika didukung)
+local success = pcall(function()
+    game:GetService("TeleportService"):TeleportToPrivateServer(
+        placeId,
+        linkCode,
+        {game.Players.LocalPlayer}
+    )
+end)
+
+if success then
+    print("🎮 Joining private server...")
+else
+    print("⚠️ Gunakan link yang sudah disalin ke clipboard")
+end
